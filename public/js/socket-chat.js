@@ -1,30 +1,33 @@
 var socket = io();
 
-// Variable para almacenar los datos ingresados por la url
 var params = new URLSearchParams(window.location.search);
-// En caso de que no venga el nombre del usuario y la sala
+
+// Se valida que si venga el nombre y la salda desde el formulario
+// en caso tal de que no se regresa al index
 if (!params.has('nombre') || !params.has('sala')) {
     window.location = 'index.html';
     throw new Error('El nombre y sala son necesarios');
 }
 
-// Si viene la variable nombre, se crea el usuario
+// se crea un objeto usuario con los datos recibidos
 var usuario = {
     nombre: params.get('nombre'),
     sala: params.get('sala')
-}
+};
 
-// Una vez se realiza la coneccion con el servidor
+
+// Escucha cuando se realiza la conexion con el servidor
 socket.on('connect', function() {
     console.log('Conectado al servidor');
-    // Se envia el usuario al servidor, y se revise la respuesta del servidor
-    // la respuesta del servidor es sobre lo usuarios conectados
+    // Se le emite al servidor que el usuario entro al chat
     socket.emit('entrarChat', usuario, function(resp) {
-        console.log('usuarios conectados', resp);
+        // y se renderiza el nuevo usuario que ingreso, y se muestra en el chat.html
+        renderizarUsuarios(resp);
     });
+
 });
 
-// escuchar
+// escuchar cuando se pierde la conexion
 socket.on('disconnect', function() {
 
     console.log('Perdimos conexión con el servidor');
@@ -33,31 +36,30 @@ socket.on('disconnect', function() {
 
 
 // Enviar información
-/**', {
-    usuario: 'Fernando',
-    mensaje: 'Hola Mundo'
-}, function(resp) {
-    console.log('respuesta server: ', resp);
-});*/
+// socket.emit('crearMensaje', {
+//     nombre: 'Fernando',
+//     mensaje: 'Hola Mundo'
+// }, function(resp) {
+//     console.log('respuesta server: ', resp);
+// });
 
 // Escuchar información
 socket.on('crearMensaje', function(mensaje) {
-
-    console.log('Servidor:', mensaje);
-
+    //console.log('Servidor:', mensaje);
+    // Se renderiza el mensaje y se envia false dado que lo esta recibiendo o soy yo quien lo recibe
+    renderizarMensajes(mensaje, false);
+    scrollBottom();
 });
-
 
 // Escuchar cambios de usuarios
-// cuando un usuario ingresa o sale del chat
+// cuando un usuario entra o sale del chat
 socket.on('listaPersona', function(personas) {
-
-    console.log('Servidor:', personas);
-
+    renderizarUsuarios(personas);
 });
 
-// mensajes privados
-// acción para escuchar al servidor y enviarse a la persona privada
+// Mensajes privados
 socket.on('mensajePrivado', function(mensaje) {
-    console.log('mensaje privado: ', mensaje);
-})
+
+    console.log('Mensaje Privado:', mensaje);
+
+});

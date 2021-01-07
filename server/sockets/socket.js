@@ -24,18 +24,22 @@ io.on('connection', (client) => {
         // Cuando una persona ingresa al chat, se emite el evento a todos los clientes conectados a la sala
         // y se envia el listado de personas conectadas a la sala
         client.broadcast.to(data.sala).emit('listaPersona', usuario.getPersonasPorSala(data.sala));
+        // Se enviar mensaje indicando la persona que entro al chat
+        client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Administrador', `${data.nombre} entro`));
         // Se retonar al cliente las personas ingresadas al chat de una misma sala
         callback(usuario.getPersonasPorSala(data.sala));
     });
 
     // El servidor recibe cualquie mensaje enviado por cualquier cliente
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         // Se obtiene la persona que esta enviado el mensaje
         let persona = usuario.getPersona(client.id);
         // Se crea el mensaje
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
         // Se el envia el mensaje a todos los clientes conectados en una misma sala
         client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
+        // regreso el mensaje al cliente
+        callback(mensaje);
     });
 
     // 
